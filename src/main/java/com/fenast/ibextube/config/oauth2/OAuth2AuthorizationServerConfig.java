@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -27,6 +28,9 @@ import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
@@ -47,20 +51,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
 
     @Autowired
     @Qualifier("authenticationManagerBean")
-    //@Lazy
-    // Need to separate the UserDetail and Oauth2 Config
     private AuthenticationManager authenticationManager;
-
-/*    @Autowired
-    private UserDetailsService userDetailsService;*/
-
-    @Autowired
-    @Qualifier(value = "UserDetailsServiceImpl")
-    @Lazy
-    private UserDetailsService userDetailsService;
-
-/*    @Autowired
-    private UserDetailsServiceImpl userDetailsService;*/
 
     @Autowired
     @Qualifier(value = "oauthClientPasswordEncoder")
@@ -72,27 +63,19 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
 
     @Bean
     public TokenStore tokenStore() {
-        return new JdbcTokenStore(dataSource());
+        return new JwtTokenStore(jwtTokenEnhancer());
     }
 
     @Override
     public void configure(final AuthorizationServerSecurityConfigurer oauthServer) throws Exception {
         oauthServer.tokenKeyAccess("permitAll()")
-                .checkTokenAccess("isAuth enticated()")
+                .checkTokenAccess("isAuthenticated()")
                 .passwordEncoder(noOpPasswordEncoder);
     }
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.jdbc(dataSource());
-    }
-
-    @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
-        final TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-        tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer()));
-        endpoints.tokenStore(tokenStore()).tokenEnhancer(tokenEnhancerChain)
-                .authenticationManager(authenticationManager).userDetailsService(userDetailsService).allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT);
     }
 
     @Bean
@@ -102,6 +85,33 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
         defaultTokenServices.setTokenStore(tokenStore());
         defaultTokenServices.setSupportRefreshToken(true);
         return defaultTokenServices;
+    }
+
+    @Bean
+    public JwtAccessTokenConverter jwtTokenEnhancer() {
+        String pwd = env.getProperty("keystore.password");
+        pwd = "205364eyu";
+        KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(new ClassPathResource("ibextube.jks"),pwd.toCharArray());
+        JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+        converter.setKeyPair(keyStoreKeyFactory.getKeyPair("ibextube"));
+        return converter;
+    }
+
+
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) {
+        final TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+        tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer(), accessTokenConverter()));
+        endpoints.tokenStore(tokenStore()).tokenEnhancer(tokenEnhancerChain)
+                .authenticationManager(authenticationManager);//.userDetailsService(userDetailsService);//.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT);
+    }
+
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter() {
+        final JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+        final KeyStoreKeyFactory keyStoreKeyFactory = new KeyStoreKeyFactory(new ClassPathResource("ibextube.jks"), "205364eyu".toCharArray());
+        converter.setKeyPair(keyStoreKeyFactory.getKeyPair("ibextube"));
+        return converter;
     }
 
     @Bean
@@ -134,84 +144,4 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
         dataSource.setPassword(env.getProperty("jdbc.pass"));
         return dataSource;
     }
-
-
-    // JDBC Token Store Configuration
-
-/*    @Bean
-    public DataSourceInitializer dataSourceInitializer(final DataSource dataSource) {
-        final DataSourceInitializer initializer = new DataSourceInitializer();
-        initializer.setDataSource(dataSource);
-        initializer.setDatabasePopulator(databasePopulator());
-        return initializer;
-    }
-
-    private DatabasePopulator databasePopulator() {
-        final ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(schemaScript);
-        populator.addScript(dataScript);
-        return populator;
-    }
-
-    @Bean
-    public DataSource dataSource() {
-        final DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-        dataSource.setUrl(env.getProperty("jdbc.url"));
-        dataSource.setUsername(env.getProperty("jdbc.user"));
-        dataSource.setPassword(env.getProperty("jdbc.pass"));
-        return dataSource;
-    }
-
-    @Override
-    public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.jdbc(dataSource());
-*//*                .withClient("sampleClientId")
-                .authorizedGrantTypes("implicit")
-                .scopes("read")
-                .autoApprove(true)
-                .and()
-                .withClient("clientIdPassword")
-                .secret("secret")
-                .authorizedGrantTypes("password","authorization_code", "refresh_token")
-                .scopes("read");*//*
-    }
-
-    @Override
-    public void configure(final AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        final TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-        tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer()));
-        endpoints.tokenStore(tokenStore())
-                .tokenEnhancer(tokenEnhancerChain)
-                .authenticationManager(authenticationManager);
-    }
-
-    @Bean
-    @Primary
-    public DefaultTokenServices tokenServices() {
-        final DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
-        defaultTokenServices.setSupportRefreshToken(true);
-        return defaultTokenServices;
-    }
-
-    @Bean
-    public ConsumerTokenServices consumerTokenServices() {
-        final DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
-        defaultTokenServices.setSupportRefreshToken(true);
-        return defaultTokenServices;
-    }
-
-    @Bean
-    public TokenEnhancer tokenEnhancer() {
-        return new CustomTokenEnhancer();
-    }
-
-
-    @Bean
-    public TokenStore tokenStore() {
-        return new JdbcTokenStore(dataSource());
-    }*/
-
 }

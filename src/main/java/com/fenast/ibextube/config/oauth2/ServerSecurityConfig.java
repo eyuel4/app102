@@ -38,12 +38,6 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier(value = "oauthClientPasswordEncoder")
     private PasswordEncoder oauthClientPasswordEncoder;
 
-    //@Autowired
-    @SuppressWarnings("unused")
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Override
     @Bean
@@ -51,20 +45,20 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
         return super.authenticationManagerBean();
     }
 
-    @Override
+/*    @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
-    }
+    }*/
 
-/*   @Autowired
+   @Autowired
     public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
         // @formatter:off
 
-         auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
+         //auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
         auth.inMemoryAuthentication()
                 .passwordEncoder(userPasswordEncoder)
                 .withUser("john").password(userPasswordEncoder.encode( "123")).roles("USER");
-    }*/
+    }
       /*          .withUser("tom").password("111").roles("ADMIN").and()
                 .withUser("user1").password("pass").roles("USER").and()
                 .withUser("admin").password("nimda").roles("ADMIN"); */
