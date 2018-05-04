@@ -54,15 +54,14 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
     public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
         // @formatter:off
 
-         //auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
+//         auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
         auth.inMemoryAuthentication()
                 .passwordEncoder(userPasswordEncoder)
-                .withUser("john").password(userPasswordEncoder.encode( "123")).roles("USER");
+                .withUser("john").password(userPasswordEncoder.encode( "123")).roles("USER").and()
+                .withUser("tom").password(userPasswordEncoder.encode("111")).roles("ADMIN").and()
+                .withUser("user1").password(userPasswordEncoder.encode("pass")).roles("USER").and()
+                .withUser("admin").password(userPasswordEncoder.encode("nimda")).roles("ADMIN");
     }
-      /*          .withUser("tom").password("111").roles("ADMIN").and()
-                .withUser("user1").password("pass").roles("USER").and()
-                .withUser("admin").password("nimda").roles("ADMIN"); */
-    //}
 
 /*    @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
