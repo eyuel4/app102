@@ -1,6 +1,7 @@
 package com.fenast.ibextube.config.oauth2;
 
 /*import com.fenast.ibextube.config.security.IbexUserDetailsService;*/
+import com.fenast.ibextube.repository.UserRepository;
 import com.fenast.ibextube.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,13 +23,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 @Configuration
+@EnableWebSecurity
 /*@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)*/
 public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    @Lazy
-    @Qualifier(value = "UserDetailsServiceImpl")
-    private UserDetailsServiceImpl userDetailsService;
+    private UserRepository userRepository;
 
     @Autowired
     @Qualifier(value = "userPasswordEncoder")
@@ -38,7 +38,6 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier(value = "oauthClientPasswordEncoder")
     private PasswordEncoder oauthClientPasswordEncoder;
 
-
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
@@ -50,92 +49,33 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
     }*/
 
-   @Autowired
-    public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
-        // @formatter:off
-
-//         auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
-        auth.inMemoryAuthentication()
-                .passwordEncoder(userPasswordEncoder)
-                .withUser("john").password(userPasswordEncoder.encode( "123")).roles("USER").and()
-                .withUser("tom").password(userPasswordEncoder.encode("111")).roles("ADMIN").and()
-                .withUser("user1").password(userPasswordEncoder.encode("pass")).roles("USER").and()
-                .withUser("admin").password(userPasswordEncoder.encode("nimda")).roles("ADMIN");
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsServiceBean()).passwordEncoder(userPasswordEncoder);
     }
 
-/*    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(userPasswordEncoder);
-    }*/
+    @Override
+    public UserDetailsService userDetailsServiceBean() throws Exception {
+        return new UserDetailsServiceImpl(userRepository);
+    }
 
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
-/*        this.authenticationManager = new AuthenticationManager() {
-            @Override
-            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                return authenticationManagerBuilder.getOrBuild().authenticate(authentication);
-            }
-        };*/
         http.authorizeRequests()
                 .antMatchers("/login").permitAll()
                 .antMatchers("/oauth/token/revokeById/**").permitAll()
                 .antMatchers("/tokens/**").permitAll()
+                .antMatchers("/test/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin().disable()
                 .csrf().disable();
     }
 
-/*    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(4);
-    }*/
-
     @SuppressWarnings("deprecation")
     @Bean
     public static NoOpPasswordEncoder passwordEncoder() {
         return (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
     }
-
-/*
-    @Autowired
-    private ClientDetailsService clientDetailsService;
-
-    @Autowired
-    private IbexUserDetailsService ibexUserDetailsService;
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-*/
-/*        auth.inMemoryAuthentication()
-                .withUser("john").password("123").roles("USER");*//*
-
-       // auth.jdbcAuthentication().passwordEncoder(NoOpPasswordEncoder.getInstance());
-        auth.userDetailsService(ibexUserDetailsService).passwordEncoder(passwordEncoder());
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Override
-    @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Override
-    protected void configure(final HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers("/login").permitAll()
-                .antMatchers("/oauth/token/revokeById/**").permitAll()
-                .antMatchers("/tokens/**").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin().permitAll();
-    }
-
-*/
 
 }

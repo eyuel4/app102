@@ -51,6 +51,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
 
     @Autowired
     @Qualifier("authenticationManagerBean")
+    @Lazy
     private AuthenticationManager authenticationManager;
 
     @Autowired
@@ -70,7 +71,7 @@ public class OAuth2AuthorizationServerConfig extends AuthorizationServerConfigur
     public void configure(final AuthorizationServerSecurityConfigurer oauthServer) throws Exception {
         oauthServer.tokenKeyAccess("permitAll()")
                 .checkTokenAccess("isAuthenticated()")
-                .passwordEncoder(noOpPasswordEncoder);
+                .passwordEncoder(oauthClientPasswordEncoder);
     }
 
     @Override
