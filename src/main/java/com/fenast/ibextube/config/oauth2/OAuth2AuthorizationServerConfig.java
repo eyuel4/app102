@@ -1,6 +1,6 @@
 package com.fenast.ibextube.config.oauth2;
 
-/*import com.fenast.ibextube.service.impl.UserDetailsServiceImpl;*/
+/*import com.fenast.ibextube.service.UserDetailsServiceImpl;*/
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package com.fenast.ibextube.service.impl;
+package com.fenast.ibextube.service;
 
 import com.fenast.ibextube.model.Role;
 import com.fenast.ibextube.model.User;
