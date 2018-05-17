@@ -53,9 +53,6 @@ public class User implements  java.io.Serializable {
 	@JoinTable(joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Collection<Role> roles;
 
-	@Column(name = "profile_pic")
-	private String profilePic;
-
 
 /*
 	@Override
@@ -161,13 +158,5 @@ public class User implements  java.io.Serializable {
 
 	public void setRoles(Collection<Role> roles) {
 		this.roles = roles;
-	}
-
-	public String getProfilePic() {
-		return profilePic;
-	}
-
-	public void setProfilePic(String profilePic) {
-		this.profilePic = profilePic;
 	}
 }
