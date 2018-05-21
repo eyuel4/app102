@@ -50,7 +50,7 @@ public class UserDetailsServiceImpl  implements UserDetailsService {
                 LOGGER.error("Username not found");
                 return null;
             }
-            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), getAuthorities(user));
+            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.isEnabled(), user.isAccountExpired() , user.isCredentialsExpired(), user.isAccountLocked() ,getAuthorities(user));
         } catch (Exception e) {
             LOGGER.debug("user not found with");
             throw new UsernameNotFoundException(username);
