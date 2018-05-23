@@ -53,6 +53,8 @@ public class User implements  java.io.Serializable {
 	@JoinTable(joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Collection<Role> roles;
 
+	@Column(name = "confirmed")
+	private boolean confirmed;
 
 /*
 	@Override
@@ -158,5 +160,13 @@ public class User implements  java.io.Serializable {
 
 	public void setRoles(Collection<Role> roles) {
 		this.roles = roles;
+	}
+
+	public boolean isConfirmed() {
+		return confirmed;
+	}
+
+	public void setConfirmed(boolean confirmed) {
+		this.confirmed = confirmed;
 	}
 }
